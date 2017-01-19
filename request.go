@@ -18,6 +18,7 @@ type Request interface {
 	UrlParams() map[string][]string
 	UrlPath() string
 	SetJSON(string) Request
+	SetBody([]byte) Request
 
 	SetBodyParam(string, ...string) Request
 	BodyParams() map[string][]string
@@ -34,9 +35,11 @@ type formFile struct {
 
 type request struct {
 	*session
-	method     string
-	URL        string
-	headers    map[string][]string
+	method  string
+	URL     string
+	headers map[string][]string
+
+	isJSON     bool
 	body       []byte
 	bodyParams map[string][]string
 	urlParams  map[string][]string
@@ -118,7 +121,14 @@ func (self *request) UrlPath() string {
 }
 
 func (self *request) SetJSON(json string) Request {
+	self.isJSON = true
 	self.body = []byte(json)
+	return self
+}
+
+func (self *request) SetBody(body []byte) Request {
+	self.isJSON = false
+	self.body = body
 	return self
 }
 
@@ -154,9 +164,15 @@ func (self *request) parseBody() (req *http.Request, err error) {
 
 	// Process message body
 	if len(self.body) > 0 {
-		self.headers["Content-Type"] = []string{"application/json"}
-		req, err = http.NewRequest(self.method, self.UrlPath(),
-			strings.NewReader(string(self.body)))
+		if self.isJSON {
+			self.headers["Content-Type"] = []string{"application/json"}
+			req, err = http.NewRequest(self.method, self.UrlPath(),
+				strings.NewReader(string(self.body)))
+		} else {
+			var body *bytes.Buffer
+			body = bytes.NewBuffer(self.body)
+			req, err = http.NewRequest(self.method, self.UrlPath(), body)
+		}
 	} else if len(self.files) > 0 {
 		// multipart
 		body := new(bytes.Buffer)
