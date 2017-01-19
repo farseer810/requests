@@ -3,7 +3,6 @@ package requests
 import (
 	"bytes"
 	"errors"
-	// "fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
