@@ -8,8 +8,9 @@ import (
 )
 
 type Session interface {
-	SetTimeout(time.Duration) Session
-	Timeout() time.Duration
+	// TODO: implement timeout
+	// SetTimeout(time.Duration) Session
+	// Timeout() time.Duration
 	SetCookies(map[string]string) Session
 	Cookies() map[string]string
 
@@ -27,6 +28,7 @@ type session struct {
 	cookies map[string]string
 }
 
+// Create a session
 func NewSession() Session {
 	jar, _ := cookiejar.New(nil)
 	client := &http.Client{Jar: jar}
@@ -35,45 +37,53 @@ func NewSession() Session {
 	return s
 }
 
-func (self *session) SetTimeout(timeout time.Duration) Session {
-	self.Client.Timeout = timeout
-	return self
+func (this *session) SetTimeout(timeout time.Duration) Session {
+	this.Client.Timeout = timeout
+	return this
 }
 
-func (self *session) Timeout() time.Duration {
-	return self.Client.Timeout
+func (this *session) Timeout() time.Duration {
+	return this.Client.Timeout
 }
 
-func (self *session) SetCookies(cookies map[string]string) Session {
-	self.cookies = make(map[string]string)
+// initialize cookies for this session
+func (this *session) SetCookies(cookies map[string]string) Session {
+	this.cookies = make(map[string]string)
 	for key, value := range cookies {
-		self.cookies[key] = value
+		this.cookies[key] = value
 	}
-	return self
+	return this
 }
 
-func (self *session) Cookies() map[string]string {
+// the cookies getter
+func (this *session) Cookies() map[string]string {
 	cookies := make(map[string]string)
-	for key, value := range self.cookies {
+	for key, value := range this.cookies {
 		cookies[key] = value
 	}
 	return cookies
 }
 
-func (self *session) setCookies(URL *url.URL) {
-	cookies := self.Jar.Cookies(URL)
-	for key, value := range self.cookies {
-		// only sets the cookie when none corresponding ones are presented
+// should be called before every request
+func (this *session) setCookies(URL *url.URL) {
+	if this.Jar == nil {
+		// this session is without a cookiejar
+		return
+	}
+
+	cookies := this.Jar.Cookies(URL)
+	for name, value := range this.cookies {
+		// only sets the cookie when no corresponding one is found
 		found := false
 		for _, cookie := range cookies {
-			if cookie.Name == key {
+			if cookie.Name == name {
 				found = true
 				break
 			}
 		}
 		if !found {
-			cookies = append(cookies, &http.Cookie{Name: key, Value: value, MaxAge: 3600 * 24 * 7})
+			cookies = append(cookies, &http.Cookie{Name: name, Value: value, MaxAge: 3600 * 24 * 7})
 		}
 	}
-	self.Jar.SetCookies(URL, cookies)
+	this.Jar.SetCookies(URL, cookies)
 }

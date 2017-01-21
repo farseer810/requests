@@ -46,17 +46,23 @@ type request struct {
 	files      map[string]*formFile
 }
 
+// Validate URLPath
 func parseURL(urlPath string) (URL *url.URL, err error) {
+	// First pass
 	URL, err = url.Parse(urlPath)
 	if err != nil {
 		return nil, err
 	}
+
+	// To check the Scheme after the first pass, if it is neither http or https, then make it default to be http and validate again
 	if URL.Scheme != "http" && URL.Scheme != "https" {
 		urlPath = "http://" + urlPath
 		URL, err = url.Parse(urlPath)
 		if err != nil {
 			return nil, err
 		}
+
+		// Accepts only http and https scheme
 		if URL.Scheme != "http" && URL.Scheme != "https" {
 			return nil, errors.New("[package requests] only HTTP and HTTPS are accepted")
 		}
@@ -64,15 +70,20 @@ func parseURL(urlPath string) (URL *url.URL, err error) {
 	return
 }
 
+// Create a request
 func newRequest(method string, urlPath string, s *session) (Request, error) {
+	// Validate URLPath
 	URL, err := parseURL(urlPath)
 	if err != nil {
 		return nil, err
 	}
+
+	// Extract the url params from the urlpath
 	urlParams := make(map[string][]string)
 	for key, values := range URL.Query() {
 		urlParams[key] = values
 	}
+
 	urlPath = URL.Scheme + "://" + URL.Host + URL.Path
 	r := &request{session: s, method: method, URL: urlPath}
 	r.headers = make(map[string][]string)
@@ -82,103 +93,114 @@ func newRequest(method string, urlPath string, s *session) (Request, error) {
 	return r, nil
 }
 
-func (self *request) SetHeader(key string, values ...string) Request {
+// Set a request header, could be multiple values. If no values are provided, then delete the key if any.
+func (this *request) SetHeader(key string, values ...string) Request {
 	if len(values) > 0 {
-		self.headers[key] = values[:]
+		this.headers[key] = values[:]
 	} else {
-		delete(self.headers, key)
+		delete(this.headers, key)
 	}
-	return self
+	return this
 }
 
-func (self *request) Headers() map[string][]string {
+// Get a copy of request headers, any modification made to this map WILL NOT reflect back to the actually request headers
+func (this *request) Headers() map[string][]string {
 	headers := make(map[string][]string)
-	for key, values := range self.headers {
+	for key, values := range this.headers {
 		headers[key] = values[:]
 	}
 	return headers
 }
 
-func (self *request) SetUrlParam(key string, values ...string) Request {
+// Set a url param, could be multiple values. If no values are provided, then delete the key if any.
+func (this *request) SetUrlParam(key string, values ...string) Request {
 	if len(values) > 0 {
-		self.urlParams[key] = values[:]
+		this.urlParams[key] = values[:]
 	} else {
-		delete(self.urlParams, key)
+		delete(this.urlParams, key)
 	}
-	return self
+	return this
 }
 
-func (self *request) UrlParams() map[string][]string {
+// Get a copy of url params, any modification made to this map WILL NOT reflect back to the actually url params
+func (this *request) UrlParams() map[string][]string {
 	params := make(map[string][]string)
-	for key, values := range self.urlParams {
+	for key, values := range this.urlParams {
 		params[key] = values[:]
 	}
 	return params
 }
 
-func (self *request) UrlPath() string {
-	return self.URL + "?" + parseParams(self.urlParams).Encode()
+// Get the full url path
+func (this *request) UrlPath() string {
+	return this.URL + "?" + parseParams(this.urlParams).Encode()
 }
 
-func (self *request) SetJSON(json string) Request {
-	self.isJSON = true
-	self.body = []byte(json)
-	return self
+// Set a JSON message(Content-Type header will be "application/json")
+func (this *request) SetJSON(json string) Request {
+	this.isJSON = true
+	this.body = []byte(json)
+	return this
 }
 
-func (self *request) SetBody(body []byte) Request {
-	self.isJSON = false
-	self.body = body
-	return self
+// Set raw message body
+// NOTICE: it is the users' responsability to set the correct Content-Type header
+func (this *request) SetBody(body []byte) Request {
+	this.isJSON = false
+	this.body = body
+	return this
 }
 
-func (self *request) SetBodyParam(key string, values ...string) Request {
+// Set a body param, could be multiple values. If no values are provided, then delete the key if any.
+func (this *request) SetBodyParam(key string, values ...string) Request {
 	if len(values) > 0 {
-		self.bodyParams[key] = values[:]
+		this.bodyParams[key] = values[:]
 	} else {
-		delete(self.bodyParams, key)
+		delete(this.bodyParams, key)
 	}
-	return self
+	return this
 }
 
-func (self *request) BodyParams() map[string][]string {
+// Get a copy of body params, any modification made to this map WILL NOT reflect back to the actually body params
+func (this *request) BodyParams() map[string][]string {
 	params := make(map[string][]string)
-	for key, values := range self.urlParams {
+	for key, values := range this.urlParams {
 		params[key] = values[:]
 	}
 	return params
 }
 
-func (self *request) AddFile(fieldname string, filename string, data []byte) Request {
+// Add a file
+func (this *request) AddFile(fieldname string, filename string, data []byte) Request {
 	if fieldname != "" && filename != "" && data != nil {
-		self.files[fieldname] = &formFile{filename: fieldname, data: data}
+		this.files[fieldname] = &formFile{filename: fieldname, data: data}
 	}
-	return self
+	return this
 }
 
-func (self *request) parseBody() (req *http.Request, err error) {
+func (this *request) parseBody() (req *http.Request, err error) {
 	// GET and TRACE request should not have a message body
-	if self.method == "GET" || self.method == "TRACE" {
-		req, err = http.NewRequest(self.method, self.UrlPath(), nil)
+	if this.method == "GET" || this.method == "TRACE" {
+		req, err = http.NewRequest(this.method, this.UrlPath(), nil)
 	}
 
 	// Process message body
-	if len(self.body) > 0 {
-		if self.isJSON {
-			self.headers["Content-Type"] = []string{"application/json"}
-			req, err = http.NewRequest(self.method, self.UrlPath(),
-				strings.NewReader(string(self.body)))
+	if len(this.body) > 0 {
+		if this.isJSON {
+			this.headers["Content-Type"] = []string{"application/json"}
+			req, err = http.NewRequest(this.method, this.UrlPath(),
+				strings.NewReader(string(this.body)))
 		} else {
 			var body *bytes.Buffer
-			body = bytes.NewBuffer(self.body)
-			req, err = http.NewRequest(self.method, self.UrlPath(), body)
+			body = bytes.NewBuffer(this.body)
+			req, err = http.NewRequest(this.method, this.UrlPath(), body)
 		}
-	} else if len(self.files) > 0 {
+	} else if len(this.files) > 0 {
 		// multipart
 		body := new(bytes.Buffer)
 		writer := multipart.NewWriter(body)
 		var part io.Writer
-		for fieldname, file := range self.files {
+		for fieldname, file := range this.files {
 			part, err = writer.CreateFormFile(fieldname, file.filename)
 			if err != nil {
 				return
@@ -188,7 +210,7 @@ func (self *request) parseBody() (req *http.Request, err error) {
 				return
 			}
 		}
-		for fieldname, values := range self.bodyParams {
+		for fieldname, values := range this.bodyParams {
 			temp := make(map[string][]string)
 			temp[fieldname] = values
 
@@ -202,24 +224,24 @@ func (self *request) parseBody() (req *http.Request, err error) {
 		if err != nil {
 			return
 		}
-		self.headers["Content-Type"] = []string{writer.FormDataContentType()}
-		req, err = http.NewRequest(self.method, self.UrlPath(), body)
+		this.headers["Content-Type"] = []string{writer.FormDataContentType()}
+		req, err = http.NewRequest(this.method, this.UrlPath(), body)
 	} else {
-		self.headers["Content-Type"] = []string{"application/x-www-form-urlencoded"}
-		req, err = http.NewRequest(self.method, self.UrlPath(),
-			strings.NewReader(parseParams(self.bodyParams).Encode()))
+		this.headers["Content-Type"] = []string{"application/x-www-form-urlencoded"}
+		req, err = http.NewRequest(this.method, this.UrlPath(),
+			strings.NewReader(parseParams(this.bodyParams).Encode()))
 	}
 	return
 }
 
-func (self *request) Send() (res Response, err error) {
-	req, err := self.parseBody()
+func (this *request) Send() (res Response, err error) {
+	req, err := this.parseBody()
 	if err != nil {
 		return
 	}
-	self.session.setCookies(req.URL)
-	req.Header = parseHeaders(self.headers)
-	httpResponse, err := self.session.Do(req)
+	this.session.setCookies(req.URL)
+	req.Header = parseHeaders(this.headers)
+	httpResponse, err := this.session.Do(req)
 	if err != nil {
 		return
 	}

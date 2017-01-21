@@ -20,6 +20,7 @@ func init() {
 	sessionWithoutCookies = s
 }
 
+// Parse url params or body params. Usually the callers intend to get application/x-www-form-urlencoded format of the params
 func parseParams(params map[string][]string) url.Values {
 	v := url.Values{}
 	for key, values := range params {
@@ -30,6 +31,7 @@ func parseParams(params map[string][]string) url.Values {
 	return v
 }
 
+// Parse the headers, with some default values added
 func parseHeaders(headers map[string][]string) http.Header {
 	h := http.Header{}
 	for key, values := range headers {
@@ -48,6 +50,31 @@ func parseHeaders(headers map[string][]string) http.Header {
 	return h
 }
 
+// Thread-safe version implementations of the seven HTTP methods, but also do not have a cookiejar
 func Get(urlPath string) (Request, error) {
 	return newRequest("GET", urlPath, sessionWithoutCookies)
+}
+
+func Post(urlPath string) (Request, error) {
+	return newRequest("POST", urlPath, sessionWithoutCookies)
+}
+
+func Put(urlPath string) (Request, error) {
+	return newRequest("PUT", urlPath, sessionWithoutCookies)
+}
+
+func Delete(urlPath string) (Request, error) {
+	return newRequest("DELETE", urlPath, sessionWithoutCookies)
+}
+
+func Head(urlPath string) (Request, error) {
+	return newRequest("HEAD", urlPath, sessionWithoutCookies)
+}
+
+func Options(urlPath string) (Request, error) {
+	return newRequest("OPTIONS", urlPath, sessionWithoutCookies)
+}
+
+func Trace(urlPath string) (Request, error) {
+	return newRequest("TRACE", urlPath, sessionWithoutCookies)
 }

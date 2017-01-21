@@ -1,29 +1,30 @@
 package requests
 
-func (self *session) Get(urlPath string) (Request, error) {
-	return newRequest("GET", urlPath, self)
+// Implementations of the seven HTTP methods
+func (this *session) Get(urlPath string) (Request, error) {
+	return newRequest("GET", urlPath, this)
 }
 
-func (self *session) Post(urlPath string) (Request, error) {
-	return newRequest("POST", urlPath, self)
+func (this *session) Post(urlPath string) (Request, error) {
+	return newRequest("POST", urlPath, this)
 }
 
-func (self *session) Put(urlPath string) (Request, error) {
-	return newRequest("PUT", urlPath, self)
+func (this *session) Put(urlPath string) (Request, error) {
+	return newRequest("PUT", urlPath, this)
 }
 
-func (self *session) Delete(urlPath string) (Request, error) {
-	return newRequest("DELETE", urlPath, self)
+func (this *session) Delete(urlPath string) (Request, error) {
+	return newRequest("DELETE", urlPath, this)
 }
 
-func (self *session) Head(urlPath string) (Request, error) {
-	return newRequest("HEAD", urlPath, self)
+func (this *session) Head(urlPath string) (Request, error) {
+	return newRequest("HEAD", urlPath, this)
 }
 
-func (self *session) Options(urlPath string) (Request, error) {
-	return newRequest("OPTIONS", urlPath, self)
+func (this *session) Options(urlPath string) (Request, error) {
+	return newRequest("OPTIONS", urlPath, this)
 }
 
-func (self *session) Trace(urlPath string) (Request, error) {
-	return newRequest("TRACE", urlPath, self)
+func (this *session) Trace(urlPath string) (Request, error) {
+	return newRequest("TRACE", urlPath, this)
 }

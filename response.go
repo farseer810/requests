@@ -38,22 +38,22 @@ func newResponse(httpResponse *http.Response) (Response, error) {
 	return res, nil
 }
 
-func (res *response) StatusCode() int {
-	return res.status
+func (this *response) StatusCode() int {
+	return this.status
 }
 
-func (res *response) Headers() map[string][]string {
-	return res.headers
+func (this *response) Headers() map[string][]string {
+	return this.headers
 }
 
-func (res *response) Protocol() string {
-	return res.protocol
+func (this *response) Protocol() string {
+	return this.protocol
 }
 
-func (res *response) Body() []byte {
-	return res.body
+func (this *response) Body() []byte {
+	return this.body
 }
 
-func (res *response) ContentLength() int64 {
-	return res.content_length
+func (this *response) ContentLength() int64 {
+	return this.content_length
 }
