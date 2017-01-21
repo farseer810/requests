@@ -18,7 +18,7 @@ type Request interface {
 	UrlParams() map[string][]string
 	UrlPath() string
 	SetJSON(string) Request
-	SetBody([]byte) Request
+	SetRawBody([]byte) Request
 
 	SetBodyParam(string, ...string) Request
 	BodyParams() map[string][]string
@@ -145,7 +145,7 @@ func (this *request) SetJSON(json string) Request {
 
 // Set raw message body
 // NOTICE: it is the users' responsability to set the correct Content-Type header
-func (this *request) SetBody(body []byte) Request {
+func (this *request) SetRawBody(body []byte) Request {
 	this.isJSON = false
 	this.body = body
 	return this

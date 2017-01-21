@@ -23,10 +23,10 @@ type response struct {
 }
 
 func newResponse(httpResponse *http.Response) (Response, error) {
+	defer httpResponse.Body.Close()
 	var headers map[string][]string = httpResponse.Header
 	body, err := ioutil.ReadAll(httpResponse.Body)
 	content_length := int64(len(body))
-	httpResponse.Body.Close()
 	if err != nil {
 		return nil, err
 	}
