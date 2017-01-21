@@ -1,6 +1,7 @@
 package requests
 
 import (
+	"errors"
 	"net/http"
 	"net/url"
 )
