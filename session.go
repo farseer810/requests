@@ -21,7 +21,7 @@ type Session interface {
 	Delete(string) (Request, error)
 	Head(string) (Request, error)
 	Options(string) (Request, error)
-	Trace(string) (Request, error)
+	Patch(string) (Request, error)
 }
 
 type session struct {

@@ -7,7 +7,7 @@ import (
 // Implementations of the seven HTTP methods
 func (this *session) Method(method string, urlPath string) (Request, error) {
 	if method != "GET" && method != "POST" && method != "PUT" && method != "DELETE" &&
-		method != "HEAD" && method != "OPTIONS" && method != "TRACE" {
+		method != "HEAD" && method != "OPTIONS" && method != "PATCH" {
 		return nil, errors.New("method not supported")
 	}
 	return newRequest(method, urlPath, this)
@@ -37,6 +37,6 @@ func (this *session) Options(urlPath string) (Request, error) {
 	return newRequest("OPTIONS", urlPath, this)
 }
 
-func (this *session) Trace(urlPath string) (Request, error) {
+func (this *session) Patch(urlPath string) (Request, error) {
 	return newRequest("TRACE", urlPath, this)
 }

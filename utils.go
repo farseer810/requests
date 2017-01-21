@@ -54,7 +54,7 @@ func parseHeaders(headers map[string][]string) http.Header {
 // Thread-safe version implementations of the seven HTTP methods, but also do not have a cookiejar
 func Method(method string, urlPath string) (Request, error) {
 	if method != "GET" && method != "POST" && method != "PUT" && method != "DELETE" &&
-		method != "HEAD" && method != "OPTIONS" && method != "TRACE" {
+		method != "HEAD" && method != "OPTIONS" && method != "PATCH" {
 		return nil, errors.New("method not supported")
 	}
 	return newRequest(method, urlPath, sessionWithoutCookies)
@@ -84,6 +84,6 @@ func Options(urlPath string) (Request, error) {
 	return newRequest("OPTIONS", urlPath, sessionWithoutCookies)
 }
 
-func Trace(urlPath string) (Request, error) {
-	return newRequest("TRACE", urlPath, sessionWithoutCookies)
+func Patch(urlPath string) (Request, error) {
+	return newRequest("PATCH", urlPath, sessionWithoutCookies)
 }
