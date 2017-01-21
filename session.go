@@ -14,6 +14,7 @@ type Session interface {
 	SetCookies(map[string]string) Session
 	Cookies() map[string]string
 
+	Method(string, string) (Request, error)
 	Get(string) (Request, error)
 	Post(string) (Request, error)
 	Put(string) (Request, error)

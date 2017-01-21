@@ -133,7 +133,11 @@ func (this *request) UrlParams() map[string][]string {
 
 // Get the full url path
 func (this *request) UrlPath() string {
-	return this.URL + "?" + parseParams(this.urlParams).Encode()
+	if len(this.urlParams) > 0 {
+		return this.URL + "?" + parseParams(this.urlParams).Encode()
+	} else {
+		return this.URL
+	}
 }
 
 // Set a JSON message(Content-Type header will be "application/json")
