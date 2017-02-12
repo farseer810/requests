@@ -49,7 +49,6 @@ func (this *session) Timeout() time.Duration {
 
 // initialize cookies for this session
 func (this *session) SetCookies(cookies map[string]string) Session {
-	this.cookies = make(map[string]string)
 	for key, value := range cookies {
 		this.cookies[key] = value
 	}
@@ -83,7 +82,7 @@ func (this *session) setCookies(URL *url.URL) {
 			}
 		}
 		if !found {
-			cookies = append(cookies, &http.Cookie{Name: name, Value: value, MaxAge: 3600 * 24 * 7})
+			cookies = append(cookies, &http.Cookie{Name: name, Value: value})
 		}
 	}
 	this.Jar.SetCookies(URL, cookies)

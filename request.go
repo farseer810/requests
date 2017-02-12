@@ -14,14 +14,14 @@ type Request interface {
 	SetHeader(string, ...string) Request
 	Headers() map[string][]string
 
-	SetUrlParam(string, ...string) Request
-	UrlParams() map[string][]string
+	SetQueryParam(string, ...string) Request
+	QueryParams() map[string][]string
 	UrlPath() string
 	SetJSON(string) Request
 	SetRawBody([]byte) Request
 
-	SetBodyParam(string, ...string) Request
-	BodyParams() map[string][]string
+	SetFormParam(string, ...string) Request
+	FormParams() map[string][]string
 
 	AddFile(string, string, []byte) Request
 
@@ -39,11 +39,11 @@ type request struct {
 	URL     string
 	headers map[string][]string
 
-	isJSON     bool
-	body       []byte
-	bodyParams map[string][]string
-	urlParams  map[string][]string
-	files      map[string]*formFile
+	isJSON      bool
+	body        []byte
+	formParams  map[string][]string
+	queryParams map[string][]string
+	files       map[string]*formFile
 }
 
 // Validate URLPath
@@ -79,16 +79,16 @@ func newRequest(method string, urlPath string, s *session) (Request, error) {
 	}
 
 	// Extract the url params from the urlpath
-	urlParams := make(map[string][]string)
+	queryParams := make(map[string][]string)
 	for key, values := range URL.Query() {
-		urlParams[key] = values
+		queryParams[key] = values
 	}
 
 	urlPath = URL.Scheme + "://" + URL.Host + URL.Path
 	r := &request{session: s, method: method, URL: urlPath}
 	r.headers = make(map[string][]string)
-	r.bodyParams = make(map[string][]string)
-	r.urlParams = urlParams
+	r.formParams = make(map[string][]string)
+	r.queryParams = queryParams
 	r.files = make(map[string]*formFile)
 	return r, nil
 }
@@ -113,19 +113,19 @@ func (this *request) Headers() map[string][]string {
 }
 
 // Set a url param, could be multiple values. If no values are provided, then delete the key if any.
-func (this *request) SetUrlParam(key string, values ...string) Request {
+func (this *request) SetQueryParam(key string, values ...string) Request {
 	if len(values) > 0 {
-		this.urlParams[key] = values[:]
+		this.queryParams[key] = values[:]
 	} else {
-		delete(this.urlParams, key)
+		delete(this.queryParams, key)
 	}
 	return this
 }
 
 // Get a copy of url params, any modification made to this map WILL NOT reflect back to the actually url params
-func (this *request) UrlParams() map[string][]string {
+func (this *request) QueryParams() map[string][]string {
 	params := make(map[string][]string)
-	for key, values := range this.urlParams {
+	for key, values := range this.queryParams {
 		params[key] = values[:]
 	}
 	return params
@@ -133,8 +133,8 @@ func (this *request) UrlParams() map[string][]string {
 
 // Get the full url path
 func (this *request) UrlPath() string {
-	if len(this.urlParams) > 0 {
-		return this.URL + "?" + parseParams(this.urlParams).Encode()
+	if len(this.queryParams) > 0 {
+		return this.URL + "?" + parseParams(this.queryParams).Encode()
 	} else {
 		return this.URL
 	}
@@ -156,19 +156,19 @@ func (this *request) SetRawBody(body []byte) Request {
 }
 
 // Set a body param, could be multiple values. If no values are provided, then delete the key if any.
-func (this *request) SetBodyParam(key string, values ...string) Request {
+func (this *request) SetFormParam(key string, values ...string) Request {
 	if len(values) > 0 {
-		this.bodyParams[key] = values[:]
+		this.formParams[key] = values[:]
 	} else {
-		delete(this.bodyParams, key)
+		delete(this.formParams, key)
 	}
 	return this
 }
 
 // Get a copy of body params, any modification made to this map WILL NOT reflect back to the actually body params
-func (this *request) BodyParams() map[string][]string {
+func (this *request) FormParams() map[string][]string {
 	params := make(map[string][]string)
-	for key, values := range this.urlParams {
+	for key, values := range this.queryParams {
 		params[key] = values[:]
 	}
 	return params
@@ -214,7 +214,7 @@ func (this *request) parseBody() (req *http.Request, err error) {
 				return
 			}
 		}
-		for fieldname, values := range this.bodyParams {
+		for fieldname, values := range this.formParams {
 			temp := make(map[string][]string)
 			temp[fieldname] = values
 
@@ -233,7 +233,7 @@ func (this *request) parseBody() (req *http.Request, err error) {
 	} else {
 		this.headers["Content-Type"] = []string{"application/x-www-form-urlencoded"}
 		req, err = http.NewRequest(this.method, this.UrlPath(),
-			strings.NewReader(parseParams(this.bodyParams).Encode()))
+			strings.NewReader(parseParams(this.formParams).Encode()))
 	}
 	return
 }
